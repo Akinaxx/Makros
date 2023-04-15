@@ -1,0 +1,118 @@
+main()
+
+async function main(){
+    
+  let selected = canvas.tokens.controlled;
+  if(selected.length == 0 || selected.length > 1){
+    ui.notifications.error("Wybierz jednego bohatera");
+  }
+
+  let bohater = selected[0].actor;;
+    //console.log(bohater)
+
+    let keys = Object.keys(actor.system.attributes).filter(k => k.includes('um_'))
+    let atrybuty = keys.map(i=>actor.system.attributes[i])
+    //console.log(atrybuty)
+
+    let dialogTemplate = `
+    <div style="display:flex; flex-direction: row; justify-content: center; align-items: center; line-height: 1; margin-bottom: 10px; font-family: 'Signika';">
+    <span style="text-align: center; font-size: 16px;"><label for="modifier" style="padding-right: 5px;">Mod:</label><input id="modifier" type="number" value="0" style="width:40px; height:25px"/></span>
+    </div>  
+       `
+
+   new Dialog({
+    title: "Rzut na Unik",
+    content: dialogTemplate,
+    buttons: {
+      rollAttack: {
+        label: "Rzuć na Unik",
+        callback: async (html) => {
+            let modifier = html.find("#modifier")[0].value;
+            let skillLevel = bohater.system.attributes.um_unik?.value;
+
+            let rollString = `d100 + ${modifier}`
+            const rzut = await new Roll(rollString).toMessage({
+                speaker: {
+                  alias: bohater.name
+                }});
+            
+            const wynik = rzut.rolls[0].total;
+
+            let chatContent = ""
+            if(wynik <= Math.floor(skillLevel/20)){
+              chatContent = `
+              <p><strong style="text-align:center;
+              min-width: 75%;
+              display: flex; 
+              color: #77356c;
+              font-size: 21px;
+              background-color: #d6d3c8;
+              justify-content: center; 
+              margin: 5px; 
+              border: 1.5px solid #858581; 
+              border-radius: 5px;">Krytyczny sukces!</strong></p>
+              `
+            } else if (wynik <= Math.floor(skillLevel/5)){
+              chatContent = `
+              <p><strong style="text-align:center;
+              min-width: 75%;
+              display: flex; 
+              color: #346608;
+              font-size: 21px;
+              background-color: #d6d3c8;
+              justify-content: center; 
+              margin: 5px; 
+              border: 1.5px solid #858581; 
+              border-radius: 5px;">Wybitny sukces!</strong></p>
+              `
+            } else if (wynik <= skillLevel){
+              chatContent = `
+              <p><strong style="text-align:center;
+              min-width: 75%;
+              display: flex; 
+              color: #1c4d3f;
+              font-size: 21px;
+              background-color: #d6d3c8;
+              justify-content: center; 
+              margin: 5px; 
+              border: 1.5px solid #858581; 
+              border-radius: 5px;">Sukces!</strong></p>
+              `
+            } else if (wynik >= Math.floor(100-((100-skillLevel)/20))){
+              chatContent = `
+              <p><strong style="text-align:center;
+              min-width: 75%;
+              display: flex; 
+              color: #080808;
+              font-size: 21px;
+              background-color: #d6d3c8;
+              justify-content: center; 
+              margin: 5px; 
+              border: 1.5px solid #858581; 
+              border-radius: 5px;">Krytyczna porażka!</strong></p>
+              `
+            } else if (wynik >= skillLevel){
+              chatContent = `
+              <p><strong style="text-align:center;
+              min-width: 75%;
+              display: flex; 
+              color: #660303;
+              font-size: 21px;
+              background-color: #d6d3c8;
+              justify-content: center; 
+              margin: 5px; 
+              border: 1.5px solid #858581; 
+              border-radius: 5px;">Porażka!</strong></p>
+              `
+            }
+
+            ChatMessage.create({
+                speaker: {
+                  alias: bohater.name
+                },
+                content: chatContent
+              })
+        }
+    }}
+    }).render(true);
+}
